@@ -389,12 +389,7 @@ Contributions, issues and feature requests are welcome.<br />
 Feel free to check [issues page](https://github.com/Aak54321/Anamoly_Detection/issues) if you want to contribute.<br />
 [Check the contributing guide](./CONTRIBUTING.md).<br />
 
-## Author
 
-👤 *Aksshay88*
-
-
-- Github: [@Aksshay88](https://github.com/Aksshay88)
 
 ## Show your support
 
@@ -403,11 +398,11 @@ Please ⭐ this repository if this project helped you!
 ## 👨‍💻 Developers 
 
 <div align="center">
- <a href="https://github.com/Aswin8846">
-    <img src="https://img.shields.io/badge/Aswin8846-000.svg?&style=for-the-badge&logo=github&logoColor=white" />
+ <a href="https://github.com/Aksshay88">
+    <img src="https://img.shields.io/badge/Aksshay88-000.svg?&style=for-the-badge&logo=github&logoColor=white" />
  </a> 
   <a href="https://github.com/Aswin8846">
-    <img src="https://img.shields.io/badge/Aak54321-000.svg?&style=for-the-badge&logo=github&logoColor=white" />
+    <img src="https://img.shields.io/badge/Aswin8846-000.svg?&style=for-the-badge&logo=github&logoColor=white" />
  </a> 
   <a href="https://github.com/AkashA335">
     <img src="https://img.shields.io/badge/AkashA335-000.svg?&style=for-the-badge&logo=github&logoColor=white" />
@@ -418,10 +413,6 @@ Please ⭐ this repository if this project helped you!
  
  #
 
-<!--Typing Animation!-->
-#Link to the demonstration video 
-
-https://drive.google.com/file/d/1kb-U_11zzCJxGWsStIwFWf4u0ymd1bvY/view?usp=sharing
 
 ## 📝 License
 
