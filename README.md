@@ -420,6 +420,6 @@ Copyright © 2023 [Aak54321](https://github.com/Aak54321).<br />
 
 ---
 
-This University management was generated with ❤ by (https://github.com/Aak54321/Anamoly_Detection)
+
 
 <img src="https://readme-typing-svg.herokuapp.com?font=Open+Sans&color000&width=500&lines=Show+Some+Love+By+Giving+it+A+⭐.." >
