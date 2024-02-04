@@ -2,7 +2,6 @@
 <img src="images/anomaly_detection.png" width="600" height="250" />
 </p>
 
-# Data Challenge - Machine Learning for anomaly detection
 
 
 **Objective**  
@@ -33,7 +32,7 @@ Best Public Test Score : __89.4506 (AUC)__
 |LightGBM|Enlarged features|No|90.560%|89.381%|
 |**XGBoost**|Enlarged features|No|90.714%|**89.450%**|
 
- 
+
 
 ## 1. Exploratory Data Analysis <a class="anchor" id="ExploratoryDataAnalysis"></a>
 
@@ -42,6 +41,7 @@ It can be interesting to get an intuition about the correlations between feature
 
 **Feature correlation with target**
     
+![png](images/output_21_0.png)
 
 We notice that several features show great correlations, but none of them is highly correlated with the target.
 
@@ -52,14 +52,17 @@ As we mentionned, applying PCA before fitting models didn't seem to improve publ
 We first take a look at the Inertia explained by the principal components of the data. We notice that there is no clear **elbow** in the plot, which leads us to think that none of the features explain a significant part of the total variance.  
 By selecting 11 features above 27, we can explain approwximately **90% of the total variance** though.
     
+![png](images/output_25_0.png)
 
 **Visualization**  
 
 Interestingly, we can note there are some outliers that remains in the 'Not Anomaly' class (see below). We can hypothetize that these points are failures of sensors. To get a cleaner view of data, en also to ensure that we do not add noise in the already strongly unbalanced classes, I remove the two extreme points. Since the 'Not anomaly' class is huge, it should not interfere negatively with our model's ability to learn.
 
+![png](images/output_29_0.png)
     
 **2D plot**
 
+![png](images/output_32_0.png)
     
 
 
@@ -90,7 +93,7 @@ As **XGBoost** is the model that allowed me to get the best score on public test
     Best AUC score (training) : 0.9265217543433015
     Best params : {'eta': 0.01, 'eval_metric': 'auc', 'gamma': 1, 'learning_rate': 0.1, 'max_depth': 3, 'objective': 'binary:logistic', 'scale_pos_weight': 9, 'subsample': 0.9}
     
-![png](img/output_39_2.png)
+![png](images/output_39_2.png)
 
 ### 2.2 Enlarging feature space  <a class="anchor" id="EnlargeFeat"></a>    
 Since the dataset is not massive, we can try to create features in order to ease the learning process. Here are the choices I made :  
@@ -149,7 +152,7 @@ The **SGDClassifier** fits a Support Vector Machine model, using **stochastic gr
     CPU times: user 683 ms, sys: 98.2 ms, total: 781 ms
     Wall time: 498 ms
     
-![png](img/output_57_0.png)
+![png](images/output_57_0.png)
     
 ### 3.2 Xtreme Gradient Boosting (XGB)  <a class="anchor" id="XGB"></a>   
 
@@ -174,6 +177,7 @@ Larger ranges of hyperparameters have been tested iteratively. The one left belo
 As mentionned earlier, we fit a calibration on our predictions, in order to smoothen them in the range $[0, 1]$.  
 For the XGBoostClassifier, the calibrated predictions don't seem to outperform the original results on the **public test score**, thus, we stick with the orginal model (still, it is interesting to notice that Isotonic calibration outperforms original predictions on Validation set).
 
+![png](images/output_64_0.png)
     
 
 XGBClassifier gives predictions in the range $[0, 1]$, but it is still interesting to try calibration techniques. In this case, it does not improve the results for the AUC metric.
@@ -203,6 +207,14 @@ params ={'learning_rate':[5e-2],
     CPU times: user 33 s, sys: 1.83 s, total: 34.8 s
     Wall time: 10.6 s
 
+**Calibration predictions**
+
+![png](images/output_72_0.png)
+    
+
+
+For this particular problem, LightGBM AUC score is greater than the one obtained with XGBoost on the validation set. However, it led to slightly bigger **overfitting**, and the performance on public test set for LightGBM did not outperformed the on with XGBoost.  
+Predictions made by **LightGBM** are not well-calibrated (see above). Sigmoid calibration achieve the same performance, but smoothen the predictions in the range $[0, 1]$ (i.e lower **Brier Score**).
 
 ### 3.4 CatBoost <a class="anchor" id="CatBoost"></a>
 
@@ -229,6 +241,8 @@ params ={'learning_rate':[5e-2],
 
 **Calibration predictions**
 
+![png](images/output_79_0.png)
+
 Performance is similar to the one observed with LightGBM algorithm on the validation set. However, this technique led again to bigger **overfitting** and the public test score was lower than the one with XGBoost.
 
 ### 3.5 Random forest <a class="anchor" id="RandF"></a>
@@ -252,7 +266,44 @@ params ={'max_depth': [5],
     Wall time: 40 s
 
 
+![png](images/output_86_0.png)
+
 Without Gradient boosting, the performance is quite lower on validation set. 
+
+## 4. Stacking <a class="anchor" id="Stacking"></a>
+
+**Stacking outputs** from individual classifiers, and use another classifier to compute final prediction is commonly used  to improve performance and also to reduce **overfitting**.    
+
+In this section I use the `StackingClassifier` method from Scikit-learn, to build a meta-estimator based on classifiers listed previously (i.e classifiers that showed greatest performance on public test score).  
+
+For each classifier, I use the best parameters found with `GridSearchCV` method during my different tries, then I build a final classifier using **XGBoost**, since it is the one that showed best individual performance.  
+
+Finally, I plot the contributions from each classifier, and the final AUC on validation set for each individual classifiers, as for the meta-classifier.  
+
+The **AUC** on validation set is indeed greater with **stacking method**, however, when dealing with public test dataset, the performance of this meta-classifier did not improve the leaderboard position I obtained with XGBoost only.
+
+_Source : https://machinelearningmastery.com/stacking-ensemble-machine-learning-with-python/
+
+    AUC Scores 
+    ----------------------------
+    XGB : 0.88393  (0.01188)
+    AUC Scores 
+    ----------------------------
+    LGBM : 0.88231  (0.00947)
+    AUC Scores 
+    ----------------------------
+    RandomF : 0.88535  (0.00768)
+    AUC Scores 
+    ----------------------------
+    stacking : 0.88131  (0.00824)
+    CPU times: user 7min 23s, sys: 6.17 s, total: 7min 29s
+    Wall time: 2min 56s
+
+**Plots**
+    
+![png](images/output_92_0.png)
+    
+![png](images/output_93_1.png)
 
 
 
@@ -274,60 +325,6 @@ python train_catboost.py
 ```
 
 
-## Detailed Usage
-- After downloading the data to ./data folder, you can get the preprocessed data via get_data() method in preprocessing.py module:
-python
-from preprocessing import get_data
-
-float: val_split = 0.2 # splits %80 of data for train and %20 for val
-bool: apply_label_encoding = True # applies label encoding to categorical features
-bool: fillna = True # fills missing values with -999
-
-data = get_data(val_split, apply_label_encoding, fillna)
-
-
-- After initializing CatBoost or XGBoost classifier, perform automatic hyperparameter optimization via perform_random_search() or perform_bayes_search() in hyperparam_optimizing.py module:
-python
-from hyperparam_optimizing import perform_bayes_search, CATBOOST_BAYESSEARCH_PARAMS
-import catboost as cb
-
-# define xgboost or catboost instance
-estimator = cb.CatBoostClassifier(
-    n_estimators=200,
-    learning_rate=0.05,
-    metric_period=500,
-    od_wait=500,
-    task_type="CPU",
-    depth=8,
-) 
-
-# parse get_data() output
-X_train = data["X_train"]
-X_val = data["X_val"]
-y_train = data["y_train"]
-y_val = data["y_val"]
-
-# define parameter grid
-param_grid = CATBOOST_BAYESSEARCH_PARAMS
-
-# define scoring metric, full list can be seen at https://scikit-learn.org/stable/modules/model_evaluation.html
-scoring = 'roc_auc'
-
-# perform bayes parameter search for catboost classifier
-best_estimator = perform_bayes_search(
-    estimator, X_train, X_val, y_train, y_val, param_grid, scoring
-)
-
-
-- After fitting a model, print results such as accuracy, auc score, confusion matrix, f1 scores using calculate_scores() method from scoring.py module:
-python
-from scoring import calculate_scores
-
-scores = calculate_scores(estimator=best_estimator, X_val=X_val, y_val=y_val)
-
-
-
-
 # Anomaly Detection in Network Intrusion
 
 The goal of this project is to present different machine learning methods for anomaly detection. We have constructed three different datasets that were used to demonstrate unsupervised, semi-supervised, and supervised learning methods. 
@@ -335,6 +332,10 @@ The goal of this project is to present different machine learning methods for an
 ## Data Information
 
 The dataset can be downloaded from  [dataverse.harvard.edu](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/OPQMVF)
+
+## Dimensionality Reduction
+
+![fig](images/pca.png)
 
 ## Unsupervised Learning
 
@@ -351,7 +352,7 @@ current problem, the true labels were ignored during training in order to reflec
 
 In the real-world unsupervised problems, the business has to validate the predicted results due to absence of ground truth. In the present problem, however, the predicted labels were validated with the true labels, and the results below show that the unsupervised models predicted so many false positives, but with perfect recall.
 
-![fig](image/unsup.png)
+![fig](images/unsup.png)
 
 ## Semi-Supervised Learning
 
@@ -367,7 +368,7 @@ Using self-training semi-supervised learning method, we've trained the following
 
 We use the ground truth (true labels) of the unlabeled dataset to validate the performance of the self-training semi-supervised learning models, but in reality the ground truth of the unlabeled data points will not be provided. The results are shown below
 
-![fig](image/ss.png)
+![fig](images/ss.png)
 
 ## Supervised Learning
 
@@ -379,4 +380,55 @@ In the supervised setting, the class label for each record in the training set i
 
 The results below show that the two classifiers perform extremely well on the dataset. The AUC-ROC and AUC-PRC are 100\% for on the training (cross-validation) and test sets.
 
-![fig]image/supv.png)
+![fig](images/supv.png)
+
+
+## 🤝 Contributing
+
+Contributions, issues and feature requests are welcome.<br />
+Feel free to check [issues page](https://github.com/Aak54321/Anamoly_Detection/issues) if you want to contribute.<br />
+[Check the contributing guide](./CONTRIBUTING.md).<br />
+
+## Author
+
+👤 *Aksshay88*
+
+
+- Github: [@Aksshay88](https://github.com/Aksshay88)
+
+## Show your support
+
+Please ⭐ this repository if this project helped you!
+
+## 👨‍💻 Developers 
+
+<div align="center">
+ <a href="https://github.com/Aswin8846">
+    <img src="https://img.shields.io/badge/Aswin8846-000.svg?&style=for-the-badge&logo=github&logoColor=white" />
+ </a> 
+  <a href="https://github.com/Aswin8846">
+    <img src="https://img.shields.io/badge/Aak54321-000.svg?&style=for-the-badge&logo=github&logoColor=white" />
+ </a> 
+  <a href="https://github.com/AkashA335">
+    <img src="https://img.shields.io/badge/AkashA335-000.svg?&style=for-the-badge&logo=github&logoColor=white" />
+ </a> 
+ </div>
+ <div align="center" >
+ </div>
+ 
+ #
+
+<!--Typing Animation!-->
+#Link to the demonstration video 
+
+https://drive.google.com/file/d/1kb-U_11zzCJxGWsStIwFWf4u0ymd1bvY/view?usp=sharing
+
+## 📝 License
+
+Copyright © 2023 [Aak54321](https://github.com/Aak54321).<br />
+
+---
+
+This University management was generated with ❤ by (https://github.com/Aak54321/Anamoly_Detection)
+
+<img src="https://readme-typing-svg.herokuapp.com?font=Open+Sans&color000&width=500&lines=Show+Some+Love+By+Giving+it+A+⭐.." >
